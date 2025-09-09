@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta Médica Online</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.2rem;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        .document-selector {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            min-width: 150px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn.active {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+
+        .form-container {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .form-container.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2rem;
+            margin-top: 20px;
+        }
+
+        .form-title {
+            color: #333;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+            border-bottom: 2px solid #e1e5e9;
+            padding-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .document-selector {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 250px;
+            }
+
+            .form-row {
+                flex-direction: column;
+            }
+
+            .form-row .form-group {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Consulta Médica Online</h1>
+        <p class="subtitle">Escolha o tipo de documento que deseja gerar</p>
+        
+        <div class="document-selector">
+            <button class="btn" id="atestadoBtn" onclick="showForm('atestado')">Atestado</button>
+            <button class="btn" id="laudoBtn" onclick="showForm('laudo')">Laudo</button>
+        </div>
+
+        <!-- Formulário de Atestado -->
+        <div id="atestadoForm" class="form-container">
+            <h2 class="form-title">📄 Formulário de Atestado</h2>
+            <form id="atestadoFormElement">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nomeAtestado">Nome Completo do Paciente *</label>
+                        <input type="text" id="nomeAtestado" name="nome" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="cpfAtestado">CPF *</label>
+                        <input type="text" id="cpfAtestado" name="cpf" placeholder="000.000.000-00" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="dataConsultaAtestado">Data da Consulta *</label>
+                        <input type="date" id="dataConsultaAtestado" name="dataConsulta" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="cidAtestado">CID (Código da Doença) *</label>
+                        <input type="text" id="cidAtestado" name="cid" placeholder="Ex: M79.9" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="diasAfastamento">Dias de Afastamento *</label>
+                        <input type="number" id="diasAfastamento" name="diasAfastamento" min="1" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="observacoesAtestado">Observações</label>
+                    <textarea id="observacoesAtestado" name="observacoes" placeholder="Observações adicionais (opcional)"></textarea>
+                </div>
+
+                <button type="submit" class="btn submit-btn">Enviar Atestado</button>
+            </form>
+        </div>
+
+        <!-- Formulário de Laudo -->
+        <div id="laudoForm" class="form-container">
+            <h2 class="form-title">📋 Formulário de Laudo</h2>
+            <form id="laudoFormElement">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nomeLaudo">Nome Completo do Paciente *</label>
+                        <input type="text" id="nomeLaudo" name="nome" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="cpfLaudo">CPF *</label>
+                        <input type="text" id="cpfLaudo" name="cpf" placeholder="000.000.000-00" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="dataConsultaLaudo">Data da Consulta *</label>
+                        <input type="date" id="dataConsultaLaudo" name="dataConsulta" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="cidLaudo">CID (Código da Doença) *</label>
+                        <input type="text" id="cidLaudo" name="cid" placeholder="Ex: M79.9" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="descricaoClinica">Descrição Detalhada do Caso Clínico *</label>
+                    <textarea id="descricaoClinica" name="descricaoClinica" placeholder="Descreva detalhadamente o caso clínico..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="recomendacaoMedica">Recomendação Médica *</label>
+                    <textarea id="recomendacaoMedica" name="recomendacaoMedica" placeholder="Recomendações e orientações médicas..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="assinaturaMedico">Assinatura do Médico *</label>
+                    <input type="text" id="assinaturaMedico" name="assinaturaMedico" placeholder="Dr(a). Nome do Médico - CRM 12345" required>
+                </div>
+
+                <button type="submit" class="btn submit-btn">Enviar Laudo</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function showForm(formType) {
+            // Remove active class from all buttons
+            document.getElementById('atestadoBtn').classList.remove('active');
+            document.getElementById('laudoBtn').classList.remove('active');
+            
+            // Hide all forms
+            document.getElementById('atestadoForm').classList.remove('active');
+            document.getElementById('laudoForm').classList.remove('active');
+            
+            // Show selected form and activate button
+            if (formType === 'atestado') {
+                document.getElementById('atestadoBtn').classList.add('active');
+                document.getElementById('atestadoForm').classList.add('active');
+            } else if (formType === 'laudo') {
+                document.getElementById('laudoBtn').classList.add('active');
+                document.getElementById('laudoForm').classList.add('active');
+            }
+        }
+
+        // CPF formatting
+        function formatCPF(cpf) {
+            return cpf.replace(/\D/g, '')
+                     .replace(/(\d{3})(\d)/, '$1.$2')
+                     .replace(/(\d{3})(\d)/, '$1.$2')
+                     .replace(/(\d{3})(\d{1,2})/, '$1-$2')
+                     .replace(/(-\d{2})\d+?$/, '$1');
+        }
+
+        // Add CPF formatting to both CPF fields
+        document.getElementById('cpfAtestado').addEventListener('input', function(e) {
+            e.target.value = formatCPF(e.target.value);
+        });
+
+        document.getElementById('cpfLaudo').addEventListener('input', function(e) {
+            e.target.value = formatCPF(e.target.value);
+        });
+
+        // Handle form submissions
+        document.getElementById('atestadoFormElement').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            
+            // Validate required fields
+            if (!data.nome || !data.cpf || !data.dataConsulta || !data.cid || !data.diasAfastamento) {
+                alert('Por favor, preencha todos os campos obrigatórios!');
+                return;
+            }
+            
+            alert('✅ Atestado enviado com sucesso!\n\nDados registrados:\n' +
+                  `Paciente: ${data.nome}\n` +
+                  `CPF: ${data.cpf}\n` +
+                  `Data da Consulta: ${new Date(data.dataConsulta).toLocaleDateString('pt-BR')}\n` +
+                  `CID: ${data.cid}\n` +
+                  `Dias de Afastamento: ${data.diasAfastamento} dias`);
+        });
+
+        document.getElementById('laudoFormElement').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            
+            // Validate required fields
+            if (!data.nome || !data.cpf || !data.dataConsulta || !data.cid || 
+                !data.descricaoClinica || !data.recomendacaoMedica || !data.assinaturaMedico) {
+                alert('Por favor, preencha todos os campos obrigatórios!');
+                return;
+            }
+            
+            alert('✅ Laudo enviado com sucesso!\n\nDados registrados:\n' +
+                  `Paciente: ${data.nome}\n` +
+                  `CPF: ${data.cpf}\n` +
+                  `Data da Consulta: ${new Date(data.dataConsulta).toLocaleDateString('pt-BR')}\n` +
+                  `CID: ${data.cid}\n` +
+                  `Médico: ${data.assinaturaMedico}`);
+        });
+
+        // Set today's date as default
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('dataConsultaAtestado').value = today;
+        document.getElementById('dataConsultaLaudo').value = today;
+    </script>
+</body>
+</html>

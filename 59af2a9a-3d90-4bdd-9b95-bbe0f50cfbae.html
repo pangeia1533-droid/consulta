@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodieEvents - Find Local Cooking Events & Activities</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                borderRadius: {
+                    lg: "var(--radius)",
+                    md: "calc(var(--radius) - 2px)",
+                    sm: "calc(var(--radius) - 4px)",
+                },
+                colors: {
+                    background: "var(--background)",
+                    foreground: "var(--foreground)",
+                    card: {
+                        DEFAULT: "var(--card)",
+                        foreground: "var(--card-foreground)",
+                    },
+                    primary: {
+                        DEFAULT: "var(--primary)",
+                        foreground: "var(--primary-foreground)",
+                    },
+                    secondary: {
+                        DEFAULT: "var(--secondary)",
+                        foreground: "var(--secondary-foreground)",
+                    },
+                    muted: {
+                        DEFAULT: "var(--muted)",
+                        foreground: "var(--muted-foreground)",
+                    },
+                    accent: {
+                        DEFAULT: "var(--accent)",
+                        foreground: "var(--accent-foreground)",
+                    },
+                    destructive: {
+                        DEFAULT: "var(--destructive)",
+                        foreground: "var(--destructive-foreground)",
+                    },
+                    border: "var(--border)",
+                    input: "var(--input)",
+                    ring: "var(--ring)",
+                }
+            }
+        }
+    };
+    </script>
+    <style>
+        :root {
+            --radius: 12px;
+            --background: hsl(30 40% 98%);
+            --foreground: hsl(25 10% 15%);
+            --card: hsl(30 30% 96%);
+            --card-foreground: hsl(25 8% 20%);
+            --primary: hsl(15 90% 60%);
+            --primary-foreground: hsl(0 0% 98%);
+            --secondary: hsl(35 85% 55%);
+            --secondary-foreground: hsl(25 8% 20%);
+            --muted: hsl(30 20% 90%);
+            --muted-foreground: hsl(25 8% 45%);
+            --accent: hsl(85 30% 50%);
+            --accent-foreground: hsl(0 0% 98%);
+            --destructive: hsl(0 84% 60%);
+            --destructive-foreground: hsl(0 0% 98%);
+            --border: hsl(30 20% 85%);
+            --input: hsl(30 20% 90%);
+            --ring: hsl(15 90% 60%);
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .hero-gradient {
+            background: linear-gradient(135deg, hsl(15 90% 60%) 0%, hsl(35 85% 55%) 100%);
+        }
+        
+        .event-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .event-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .category-chip {
+            transition: all 0.2s ease;
+        }
+        
+        .category-chip.active {
+            background: hsl(15 90% 60%);
+            color: hsl(0 0% 98%);
+        }
+        
+        .bottom-nav-item {
+            transition: color 0.2s ease;
+        }
+        
+        .bottom-nav-item.active {
+            color: hsl(15 90% 60%);
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-background text-foreground">
+    <!-- @COMPONENT: Header -->
+    <header class="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
+        <div class="flex items-center justify-between px-4 py-3">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                    <i class="fas fa-utensils text-primary-foreground text-sm"></i>
+                </div>
+                <h1 class="font-bold text-xl text-foreground">FoodieEvents</h1>
+            </div>
+            <button class="p-2 rounded-lg hover:bg-muted transition-colors" data-event="click:toggleProfile">
+                <i class="fas fa-user text-muted-foreground"></i>
+            </button>
+        </div>
+    </header>
+    <!-- @END_COMPONENT: Header -->
+
+    <!-- @COMPONENT: HeroSection -->
+    <section class="hero-gradient px-4 py-8 text-white">
+        <div class="max-w-md mx-auto">
+            <h2 class="text-2xl font-bold mb-2">Discover Local Food Events</h2>
+            <p class="text-white/90 mb-6">Find cooking classes, food festivals, and culinary activities near you on any budget</p>
+            
+            <!-- Location Search -->
+            <div class="bg-white/10 backdrop-blur-sm rounded-xl p-4 mb-4">
+                <div class="flex items-center space-x-3 mb-3">
+                    <i class="fas fa-map-marker-alt text-white/80"></i>
+                    <span class="text-white/90" data-bind="user.location">San Francisco, CA</span>
+                    <button class="ml-auto text-white/80 hover:text-white transition-colors" data-event="click:changeLocation">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </div>
+                
+                <!-- Search Bar -->
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        placeholder="Search events, activities..." 
+                        class="w-full bg-white/20 border border-white/30 rounded-lg px-4 py-3 pl-10 text-white placeholder-white/70 focus:bg-white/30 focus:border-white/50 transition-all"
+                        data-implementation="Should filter events based on search query"
+                    >
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-white/70"></i>
+                </div>
+            </div>
+            
+            <!-- Budget Filter -->
+            <div class="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+                <h3 class="text-white font-medium mb-3">Budget Range</h3>
+                <div class="grid grid-cols-4 gap-2">
+                    <button class="category-chip px-3 py-2 rounded-lg bg-white/20 text-white/90 text-sm hover:bg-white/30 transition-all" data-event="click:setBudget" data-budget="free">
+                        Free
+                    </button>
+                    <button class="category-chip px-3 py-2 rounded-lg bg-white/20 text-white/90 text-sm hover:bg-white/30 transition-all" data-event="click:setBudget" data-budget="0-25">
+                        $0-25
+                    </button>
+                    <button class="category-chip px-3 py-2 rounded-lg bg-white/20 text-white/90 text-sm hover:bg-white/30 transition-all" data-event="click:setBudget" data-budget="25-50">
+                        $25-50
+                    </button>
+                    <button class="category-chip px-3 py-2 rounded-lg bg-white/20 text-white/90 text-sm hover:bg-white/30 transition-all" data-event="click:setBudget" data-budget="50+">
+                        $50+
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- @END_COMPONENT: HeroSection -->
+
+    <!-- @COMPONENT: CategoryTabs -->
+    <section class="px-4 py-6 bg-background">
+        <div class="max-w-md mx-auto">
+            <h3 class="font-semibold text-lg mb-4">Event Categories</h3>
+            <div class="flex space-x-2 overflow-x-auto pb-2">
+                <button class="category-chip active px-4 py-2 rounded-full bg-muted text-muted-foreground whitespace-nowrap text-sm font-medium" data-event="click:setCategory" data-category="all">
+                    All Events
+                </button>
+                <button class="category-chip px-4 py-2 rounded-full bg-muted text-muted-foreground hover:bg-primary hover:text-primary-foreground whitespace-nowrap text-sm font-medium" data-event="click:setCategory" data-category="cooking">
+                    Cooking Classes
+                </button>
+                <button class="category-chip px-4 py-2 rounded-full bg-muted text-muted-foreground hover:bg-primary hover:text-primary-foreground whitespace-nowrap text-sm font-medium" data-event="click:setCategory" data-category="festivals">
+                    Food Festivals
+                </button>
+                <button class="category-chip px-4 py-2 rounded-full bg-muted text-muted-foreground hover:bg-primary hover:text-primary-foreground whitespace-nowrap text-sm font-medium" data-event="click:setCategory" data-category="markets">
+                    Farmers Markets
+                </button>
+                <button class="category-chip px-4 py-2 rounded-full bg-muted text-muted-foreground hover:bg-primary hover:text-primary-foreground whitespace-nowrap text-sm font-medium" data-event="click:setCategory" data-category="community">
+                    Community Events
+                </button>
+            </div>
+        </div>
+    </section>
+    <!-- @END_COMPONENT: CategoryTabs -->
+
+    <!-- @COMPONENT: EventListings -->
+    <section class="px-4 pb-20 bg-background">
+        <div class="max-w-md mx-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-semibold text-lg">Nearby Events</h3>
+                <div class="flex space-x-2">
+                    <button class="p-2 rounded-lg hover:bg-muted transition-colors" data-event="click:toggleView" data-view="list">
+                        <i class="fas fa-list text-muted-foreground"></i>
+                    </button>
+                    <button class="p-2 rounded-lg bg-muted" data-event="click:toggleView" data-view="map">
+                        <i class="fas fa-map text-foreground"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- @MAP: events.map(event => ( -->
+            <div class="space-y-4">
+                <!-- Event Card 1 -->
+                <div class="event-card bg-card rounded-xl border border-border overflow-hidden" data-mock="true">
+                    <!-- Italian cooking class with fresh pasta being made -->
+                    <img src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=200" 
+                         alt="Italian cooking class with pasta making" 
+                         class="w-full h-32 object-cover">
+                    
+                    <div class="p-4">
+                        <div class="flex items-start justify-between mb-2">
+                            <div>
+                                <h4 class="font-semibold text-card-foreground" data-bind="event.title">Italian Pasta Making Workshop</h4>
+                                <p class="text-sm text-muted-foreground" data-bind="event.organizer">Culinary Institute SF</p>
+                            </div>
+                            <button class="p-2 hover:bg-muted rounded-lg transition-colors" data-event="click:toggleBookmark" data-event-id="1">
+                                <i class="far fa-heart text-muted-foreground hover:text-primary"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4 text-sm text-muted-foreground mb-3">
+                            <div class="flex items-center space-x-1">
+                                <i class="fas fa-calendar text-xs"></i>
+                                <span data-bind="event.date">Dec 15, 2024</span>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <i class="fas fa-clock text-xs"></i>
+                                <span data-bind="event.time">2:00 PM</span>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <i class="fas fa-map-marker-alt text-xs"></i>
+                                <span data-bind="event.distance">0.8 mi</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <span class="bg-accent text-accent-foreground px-2 py-1 rounded-lg text-xs font-medium" data-bind="event.price">$45</span>
+                                <span class="bg-secondary/20 text-secondary px-2 py-1 rounded-lg text-xs" data-bind="event.category">Cooking Class</span>
+                            </div>
+                            
+                            <div class="flex items-center space-x-1">
+                                <button class="p-2 hover:bg-muted rounded-lg transition-colors" data-event="click:shareEvent" data-platform="instagram" data-event-id="1">
+                                    <i class="fab fa-instagram text-muted-foreground hover:text-primary text-sm"></i>
+                                </button>
+                                <button class="p-2 hover:bg-muted rounded-lg transition-colors" data-event="click:shareEvent" data-platform="facebook" data-event-id="1">
+                                    <i class="fab fa-facebook text-muted-foreground hover:text-primary text-sm"></i>
+                                </button>
+                                <button class="p-2 hover:bg-muted rounded-lg transition-colors" data-event="click:shareEvent" data-platform="twitter" data-event-id="1">
+                                    <i class="fab fa-twitter text-muted-foreground hover:text-primary text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Event Card 2 -->
+                <div class="event-card bg-card rounded-xl border border-border overflow-hidden" data-mock="true">
+                    <!-- Vibrant farmers market with fresh produce and vendors -->
+                    <img src="https://images.unsplash.com/photo-1488459716781-31db52582fe9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=200" 
+                         alt="Farmers market with fresh produce" 
+                         class="w-full h-32 object-cover">
+                    
+                    <div class="p-4">
+                        <div class="flex items-start justify-between mb-2">
+                            <div>
+                                <h4 class="font-semibold text-card-foreground" data-bind="event.title">Mission District Farmers Market</h4>
+                                <p class="text-sm text-muted-foreground" data-bind="event.organizer">SF Farmers Market Association</p>
+                            </div>
+                            <button class="p-2 hover:bg-muted rounded-lg transition-colors" data-event="click:toggleBookmark" data-event-id="2">
+                                <i class="fas fa-heart text-primary"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4 text-sm text-muted-foreground mb-3">
+                            <div class="flex items-center space-x-1">
+                                <i class="fas fa-calendar text-xs"></i>
+                                <span data-bind="event.date">Every Saturday</span>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <i class="fas fa-clock text-xs"></i>
+                                <span data-bind="event.time">8:00 AM</span>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <i class="fas fa-map-marker-alt text-xs"></i>
+                                <span data-bind="event.distance">1.2 mi</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <span class="bg-accent text-accent-foreground px-2 py-1 rounded-lg text-xs font-medium" data-bind="event.price">Free</span>
+                                <span class="bg-secondary/20 text-secondary px-2 py-1 rounded-lg text-xs" data-bind="event.category">Farmers Market</span>
+                            </div>
+                            
+                            <div class="flex items-center space-x-1">
+                                <button class="p-2 hover:bg-muted rounded-lg transition-colors" data-event="click:shareEvent" data-platform="instagram" data-event-id="2">
+                                    <i class="fab fa-instagram text-muted-foreground hover:text-primary text-sm"></i>
+                                </button>
+                                <button class="p-2 hover:bg-muted rounded-lg transition-colors" data-event="click:shareEvent" data-platform="facebook" data-event-id="2">
+                                    <i class="fab fa-facebook text-muted-foreground hover:text-primary text-sm"></i>
+                                </button>
+                                <button class="p-2 hover:bg-muted rounded-lg transition-colors" data-event="click:shareEvent" data-platform="twitter" data-event-id="2">
+                                    <i class="fab fa-twitter text-muted-foreground hover:text-primary text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Event Card 3 -->
+                <div class="event-card bg-card rounded-xl border border-border overflow-hidden" data-mock="true">
+                    <!-- Colorful food festival with various food trucks and tents -->
+                    <img src="https://images.unsplash.com/photo-1555244162-803834f70033?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=200" 
+                         alt="Food festival with food trucks and vendors" 
+                         class="w-full h-32 object-cover">
+                    
+                    <div class="p-4">
+                        <div class="flex items-start justify-between mb-2">
+                            <div>
+                                <h4 class="font-semibold text-card-foreground" data-bind="event.title">Bay Area Street Food Festival</h4>
+                                <p class="text-sm text-muted-foreground" data-bind="event.organizer">SF Food Events</p>
+                            </div>
+                            <button class="p-2 hover:bg-muted rounded-lg transition-colors" data-event="click:toggleBookmark" data-event-id="3">
+                                <i class="far fa-heart text-muted-foreground hover:text-primary"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4 text-sm text-muted-foreground mb-3">
+                            <div class="flex items-center space-x-1">
+                                <i class="fas fa-calendar text-xs"></i>
+                                <span data-bind="event.date">Dec 20-22, 2024</span>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <i class="fas fa-clock text-xs"></i>
+                                <span data-bind="event.time">11:00 AM</span>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <i class="fas fa-map-marker-alt text-xs"></i>
+                                <span data-bind="event.distance">2.1 mi</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <span class="bg-accent text-accent-foreground px-2 py-1 rounded-lg text-xs font-medium" data-bind="event.price">$12</span>
+                                <span class="bg-secondary/20 text-secondary px-2 py-1 rounded-lg text-xs" data-bind="event.category">Food Festival</span>
+                            </div>
+                            
+                            <div class="flex items-center space-x-1">
+                                <button class="p-2 hover:bg-muted rounded-lg transition-colors" data-event="click:shareEvent" data-platform="instagram" data-event-id="3">
+                                    <i class="fab fa-instagram text-muted-foreground hover:text-primary text-sm"></i>
+                                </button>
+                                <button class="p-2 hover:bg-muted rounded-lg transition-colors" data-event="click:shareEvent" data-platform="facebook" data-event-id="3">
+                                    <i class="fab fa-facebook text-muted-foreground hover:text-primary text-sm"></i>
+                                </button>
+                                <button class="p-2 hover:bg-muted rounded-lg transition-colors" data-event="click:shareEvent" data-platform="twitter" data-event-id="3">
+                                    <i class="fab fa-twitter text-muted-foreground hover:text-primary text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Event Card 4 -->
+                <div class="event-card bg-card rounded-xl border border-border overflow-hidden" data-mock="true">
+                    <!-- Community garden with people working together -->
+                    <img src="https://images.unsplash.com/photo-1416879595882-3373a0480b5b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=200" 
+                         alt="Community garden with people gardening together" 
+                         class="w-full h-32 object-cover">
+                    
+                    <div class="p-4">
+                        <div class="flex items-start justify-between mb-2">
+                            <div>
+                                <h4 class="font-semibold text-card-foreground" data-bind="event.title">Community Garden Workshop</h4>
+                                <p class="text-sm text-muted-foreground" data-bind="event.organizer">Green City Gardens</p>
+                            </div>
+                            <button class="p-2 hover:bg-muted rounded-lg transition-colors" data-event="click:toggleBookmark" data-event-id="4">
+                                <i class="far fa-heart text-muted-foreground hover:text-primary"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4 text-sm text-muted-foreground mb-3">
+                            <div class="flex items-center space-x-1">
+                                <i class="fas fa-calendar text-xs"></i>
+                                <span data-bind="event.date">Dec 18, 2024</span>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <i class="fas fa-clock text-xs"></i>
+                                <span data-bind="event.time">10:00 AM</span>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <i class="fas fa-map-marker-alt text-xs"></i>
+                                <span data-bind="event.distance">0.5 mi</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <span class="bg-accent text-accent-foreground px-2 py-1 rounded-lg text-xs font-medium" data-bind="event.price">$15</span>
+                                <span class="bg-secondary/20 text-secondary px-2 py-1 rounded-lg text-xs" data-bind="event.category">Community</span>
+                            </div>
+                            
+                            <div class="flex items-center space-x-1">
+                                <button class="p-2 hover:bg-muted rounded-lg transition-colors" data-event="click:shareEvent" data-platform="instagram" data-event-id="4">
+                                    <i class="fab fa-instagram text-muted-foreground hover:text-primary text-sm"></i>
+                                </button>
+                                <button class="p-2 hover:bg-muted rounded-lg transition-colors" data-event="click:shareEvent" data-platform="facebook" data-event-id="4">
+                                    <i class="fab fa-facebook text-muted-foreground hover:text-primary text-sm"></i>
+                                </button>
+                                <button class="p-2 hover:bg-muted rounded-lg transition-colors" data-event="click:shareEvent" data-platform="twitter" data-event-id="4">
+                                    <i class="fab fa-twitter text-muted-foreground hover:text-primary text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Event Card 5 -->
+                <div class="event-card bg-card rounded-xl border border-border overflow-hidden" data-mock="true">
+                    <!-- Wine and cheese tasting event setup -->
+                    <img src="https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=200" 
+                         alt="Wine and cheese tasting setup" 
+                         class="w-full h-32 object-cover">
+                    
+                    <div class="p-4">
+                        <div class="flex items-start justify-between mb-2">
+                            <div>
+                                <h4 class="font-semibold text-card-foreground" data-bind="event.title">Wine & Cheese Pairing Evening</h4>
+                                <p class="text-sm text-muted-foreground" data-bind="event.organizer">Napa Valley Wines</p>
+                            </div>
+                            <button class="p-2 hover:bg-muted rounded-lg transition-colors" data-event="click:toggleBookmark" data-event-id="5">
+                                <i class="far fa-heart text-muted-foreground hover:text-primary"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4 text-sm text-muted-foreground mb-3">
+                            <div class="flex items-center space-x-1">
+                                <i class="fas fa-calendar text-xs"></i>
+                                <span data-bind="event.date">Dec 23, 2024</span>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <i class="fas fa-clock text-xs"></i>
+                                <span data-bind="event.time">6:30 PM</span>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <i class="fas fa-map-marker-alt text-xs"></i>
+                                <span data-bind="event.distance">3.2 mi</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <span class="bg-accent text-accent-foreground px-2 py-1 rounded-lg text-xs font-medium" data-bind="event.price">$65</span>
+                                <span class="bg-secondary/20 text-secondary px-2 py-1 rounded-lg text-xs" data-bind="event.category">Tasting</span>
+                            </div>
+                            
+                            <div class="flex items-center space-x-1">
+                                <button class="p-2 hover:bg-muted rounded-lg transition-colors" data-event="click:shareEvent" data-platform="instagram" data-event-id="5">
+                                    <i class="fab fa-instagram text-muted-foreground hover:text-primary text-sm"></i>
+                                </button>
+                                <button class="p-2 hover:bg-muted rounded-lg transition-colors" data-event="click:shareEvent" data-platform="facebook" data-event-id="5">
+                                    <i class="fab fa-facebook text-muted-foreground hover:text-primary text-sm"></i>
+                                </button>
+                                <button class="p-2 hover:bg-muted rounded-lg transition-colors" data-event="click:shareEvent" data-platform="twitter" data-event-id="5">
+                                    <i class="fab fa-twitter text-muted-foreground hover:text-primary text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_MAP )) -->
+            
+            <!-- Load More Button -->
+            <div class="mt-6 text-center">
+                <button class="bg-primary text-primary-foreground px-6 py-3 rounded-xl font-medium hover:bg-primary/90 transition-colors" data-event="click:loadMoreEvents">
+                    Load More Events
+                </button>
+            </div>
+        </div>
+    </section>
+    <!-- @END_COMPONENT: EventListings -->
+
+    <!-- @COMPONENT: BottomNavigation -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
+        <div class="flex items-center justify-around py-2">
+            <button class="bottom-nav-item active flex flex-col items-center py-2 px-3 rounded-lg" data-event="click:navigate" data-route="home">
+                <i class="fas fa-home text-lg mb-1"></i>
+                <span class="text-xs font-medium">Home</span>
+            </button>
+            <button class="bottom-nav-item flex flex-col items-center py-2 px-3 rounded-lg text-muted-foreground hover:text-foreground transition-colors" data-event="click:navigate" data-route="search">
+                <i class="fas fa-search text-lg mb-1"></i>
+                <span class="text-xs font-medium">Search</span>
+            </button>
+            <button class="bottom-nav-item flex flex-col items-center py-2 px-3 rounded-lg text-muted-foreground hover:text-foreground transition-colors" data-event="click:navigate" data-route="favorites">
+                <i class="fas fa-heart text-lg mb-1"></i>
+                <span class="text-xs font-medium">Favorites</span>
+            </button>
+            <button class="bottom-nav-item flex flex-col items-center py-2 px-3 rounded-lg text-muted-foreground hover:text-foreground transition-colors" data-event="click:navigate" data-route="map">
+                <i class="fas fa-map text-lg mb-1"></i>
+                <span class="text-xs font-medium">Map</span>
+            </button>
+            <button class="bottom-nav-item flex flex-col items-center py-2 px-3 rounded-lg text-muted-foreground hover:text-foreground transition-colors" data-event="click:navigate" data-route="profile">
+                <i class="fas fa-user text-lg mb-1"></i>
+                <span class="text-xs font-medium">Profile</span>
+            </button>
+        </div>
+    </nav>
+    <!-- @END_COMPONENT: BottomNavigation -->
+
+    <!-- @COMPONENT: ShareModal (Hidden by default) -->
+    <div id="shareModal" class="fixed inset-0 bg-black/50 flex items-end justify-center z-50 hidden" data-implementation="Modal should be controlled by state">
+        <div class="bg-card rounded-t-xl w-full max-w-md p-6 transform translate-y-full transition-transform" id="shareModalContent">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-semibold text-lg">Share Event</h3>
+                <button class="p-2 hover:bg-muted rounded-lg" data-event="click:closeShareModal">
+                    <i class="fas fa-times text-muted-foreground"></i>
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-4 gap-4 mb-6">
+                <button class="flex flex-col items-center p-3 hover:bg-muted rounded-xl transition-colors" data-event="click:shareToSocial" data-platform="instagram">
+                    <i class="fab fa-instagram text-2xl text-pink-500 mb-2"></i>
+                    <span class="text-xs">Instagram</span>
+                </button>
+                <button class="flex flex-col items-center p-3 hover:bg-muted rounded-xl transition-colors" data-event="click:shareToSocial" data-platform="facebook">
+                    <i class="fab fa-facebook text-2xl text-blue-600 mb-2"></i>
+                    <span class="text-xs">Facebook</span>
+                </button>
+                <button class="flex flex-col items-center p-3 hover:bg-muted rounded-xl transition-colors" data-event="click:shareToSocial" data-platform="twitter">
+                    <i class="fab fa-twitter text-2xl text-sky-500 mb-2"></i>
+                    <span class="text-xs">Twitter</span>
+                </button>
+                <button class="flex flex-col items-center p-3 hover:bg-muted rounded-xl transition-colors" data-event="click:copyLink">
+                    <i class="fas fa-link text-2xl text-muted-foreground mb-2"></i>
+                    <span class="text-xs">Copy Link</span>
+                </button>
+            </div>
+            
+            <div class="bg-muted rounded-lg p-3">
+                <p class="text-sm text-muted-foreground mb-2">Event Link:</p>
+                <div class="flex items-center space-x-2">
+                    <input type="text" value="https://foodieevents.com/events/123" readonly class="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-sm">
+                    <button class="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium" data-event="click:copyEventLink">
+                        Copy
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: ShareModal -->
+
+    <script>
+        // TODO: Implement business logic, API calls, and state management
+        (function() {
+            // Category filtering
+            const categoryButtons = document.querySelectorAll('[data-category]');
+            categoryButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    categoryButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    // TODO: Filter events by category
+                });
+            });
+
+            // Budget filtering
+            const budgetButtons = document.querySelectorAll('[data-budget]');
+            budgetButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    budgetButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    // TODO: Filter events by budget range
+                });
+            });
+
+            // Share event functionality
+            const shareButtons = document.querySelectorAll('[data-event="click:shareEvent"]');
+            const shareModal = document.getElementById('shareModal');
+            const shareModalContent = document.getElementById('shareModalContent');
+            
+            shareButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const platform = this.getAttribute('data-platform');
+                    const eventId = this.getAttribute('data-event-id');
+                    
+                    if (platform) {
+                        // TODO: Direct social media sharing
+                        console.log(`Sharing event ${eventId} to ${platform}`);
+                    } else {
+                        // Show share modal
+                        shareModal.classList.remove('hidden');
+                        setTimeout(() => {
+                            shareModalContent.style.transform = 'translateY(0)';
+                        }, 10);
+                    }
+                });
+            });
+
+            // Close share modal
+            document.querySelector('[data-event="click:closeShareModal"]').addEventListener('click', function() {
+                shareModalContent.style.transform = 'translateY(100%)';
+                setTimeout(() => {
+                    shareModal.classList.add('hidden');
+                }, 300);
+            });
+
+            // Bookmark functionality
+            const bookmarkButtons = document.querySelectorAll('[data-event="click:toggleBookmark"]');
+            bookmarkButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const icon = this.querySelector('i');
+                    if (icon.classList.contains('far')) {
+                        icon.classList.remove('far');
+                        icon.classList.add('fas');
+                        icon.classList.add('text-primary');
+                    } else {
+                        icon.classList.remove('fas', 'text-primary');
+                        icon.classList.add('far');
+                    }
+                    // TODO: Save bookmark state to backend
+                });
+            });
+
+            // Bottom navigation
+            const navButtons = document.querySelectorAll('.bottom-nav-item');
+            navButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    navButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    // TODO: Navigate to different views
+                });
+            });
+
+            // Load more events
+            document.querySelector('[data-event="click:loadMoreEvents"]').addEventListener('click', function() {
+                // TODO: Load additional events from API
+                console.log('Loading more events...');
+            });
+
+            // Copy link functionality
+            document.querySelector('[data-event="click:copyEventLink"]').addEventListener('click', function() {
+                const input = document.querySelector('input[readonly]');
+                input.select();
+                document.execCommand('copy');
+                // TODO: Show success message
+                console.log('Event link copied to clipboard');
+            });
+        })();
+    </script>
+</body>
+</html>
